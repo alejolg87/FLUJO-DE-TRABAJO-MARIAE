@@ -54,7 +54,7 @@ export default function Register() {
           <div className="inline-flex items-center justify-center w-12 h-12 rounded-xl bg-primary text-white font-bold text-2xl mb-6 shadow-lg shadow-primary/20">
             M
           </div>
-          <h1 className="text-2xl font-bold text-text-main tracking-tight">Crear cuenta</h1>
+          <h1 className="text-2xl font-bold text-text-main tracking-tight">Crear Cuenta</h1>
           <p className="text-text-muted mt-2">Únete a Team MariaE y organiza tu equipo</p>
         </div>
 
@@ -67,7 +67,7 @@ export default function Register() {
         <form onSubmit={handleSubmit} className="space-y-6">
           <div>
             <label className="block text-[10px] font-bold text-text-muted uppercase tracking-widest mb-2">
-              Full Name
+              Nombre Completo
             </label>
             <div className="relative">
               <User className="absolute left-4 top-1/2 -translate-y-1/2 text-text-muted/50" size={18} />
@@ -76,7 +76,7 @@ export default function Register() {
                 required
                 value={name}
                 onChange={(e) => setName(e.target.value)}
-                placeholder="Julian Dev"
+                placeholder="Nombre Completo"
                 className="input-field w-full pl-12 py-3"
               />
             </div>
@@ -84,7 +84,7 @@ export default function Register() {
 
           <div>
             <label className="block text-[10px] font-bold text-text-muted uppercase tracking-widest mb-2">
-              Work Email
+              Correo Electrónico
             </label>
             <div className="relative">
               <Mail className="absolute left-4 top-1/2 -translate-y-1/2 text-text-muted/50" size={18} />
@@ -93,7 +93,7 @@ export default function Register() {
                 required
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                placeholder="julian@company.com"
+                placeholder="usuario@empresa.com"
                 className="input-field w-full pl-12 py-3"
               />
             </div>
@@ -101,7 +101,7 @@ export default function Register() {
 
           <div>
             <label className="block text-[10px] font-bold text-text-muted uppercase tracking-widest mb-2">
-              Password
+              Contraseña
             </label>
             <div className="relative">
               <Lock className="absolute left-4 top-1/2 -translate-y-1/2 text-text-muted/50" size={18} />
@@ -111,14 +111,14 @@ export default function Register() {
                 minLength={6}
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                placeholder="Min. 6 characters"
+                placeholder="Mín. 6 caracteres"
                 className="input-field w-full pl-12 py-3"
               />
             </div>
           </div>
 
           <div className="text-[11px] text-text-muted leading-relaxed py-2 font-medium">
-            By signing up, you agree to our <Link to="/terms" className="text-primary font-bold hover:underline">Terms of Service</Link> and <Link to="/privacy" className="text-primary font-bold hover:underline">Privacy Policy</Link>.
+            Al registrarte, aceptas nuestros <Link to="/terms" className="text-primary font-bold hover:underline">Términos de Servicio</Link> y <Link to="/privacy" className="text-primary font-bold hover:underline">Política de Privacidad</Link>.
           </div>
 
           <button 
@@ -126,10 +126,10 @@ export default function Register() {
             disabled={loading}
             className="w-full btn-primary py-3.5 flex items-center justify-center gap-3 disabled:opacity-50 disabled:cursor-not-allowed text-sm uppercase tracking-widest font-bold"
           >
-            {loading ? 'Processing...' : (
+            {loading ? 'Procesando...' : (
               <>
                 <CheckCircle size={18} />
-                Get Started
+                Comenzar
               </>
             )}
           </button>
@@ -141,25 +141,25 @@ export default function Register() {
               <div className="w-full border-t border-outline"></div>
             </div>
             <div className="relative flex justify-center text-[10px] uppercase font-bold tracking-widest">
-              <span className="bg-surface px-4 text-text-muted">Or join with</span>
+              <span className="bg-surface px-4 text-text-muted">O únete con</span>
             </div>
           </div>
 
           <button
             onClick={handleGoogleSignUp}
             disabled={loading}
-            className="mt-6 w-full flex items-center justify-center gap-3 px-4 py-3 bg-white/5 border border-outline rounded-xl hover:bg-white/10 transition-all text-xs font-bold uppercase tracking-widest text-text-main disabled:opacity-50"
+            className="mt-6 w-full flex items-center justify-center gap-3 px-4 py-3 bg-white/5 border border-outline rounded-xl hover:bg-white/10 transition-all text-sm font-bold uppercase tracking-widest text-text-main disabled:opacity-50"
           >
             <Chrome size={18} className="text-primary" />
-            Google Enterprise
+            Cuenta de Google
           </button>
         </div>
 
         <div className="mt-10 text-center">
           <p className="text-xs text-text-muted">
-            Already have an account?{' '}
+            ¿Ya tienes una cuenta?{' '}
             <Link to="/login" className="text-primary font-bold hover:text-primary-hover transition-colors">
-              Sign In
+              Inicia Sesión
             </Link>
           </p>
         </div>

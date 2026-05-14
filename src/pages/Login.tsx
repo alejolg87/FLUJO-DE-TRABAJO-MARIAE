@@ -64,7 +64,7 @@ export default function Login() {
         <form onSubmit={handleSubmit} className="space-y-6">
           <div>
             <label className="block text-[10px] font-bold text-text-muted uppercase tracking-widest mb-2">
-              Email Address
+              Correo Electrónico
             </label>
             <div className="relative">
               <Mail className="absolute left-4 top-1/2 -translate-y-1/2 text-text-muted/50" size={18} />
@@ -73,7 +73,7 @@ export default function Login() {
                 required
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                placeholder="name@company.com"
+                placeholder="usuario@empresa.com"
                 className="input-field w-full pl-12 py-3"
               />
             </div>
@@ -81,7 +81,7 @@ export default function Login() {
 
           <div>
             <label className="block text-[10px] font-bold text-text-muted uppercase tracking-widest mb-2">
-              Password
+              Contraseña
             </label>
             <div className="relative">
               <Lock className="absolute left-4 top-1/2 -translate-y-1/2 text-text-muted/50" size={18} />
@@ -99,10 +99,10 @@ export default function Login() {
           <div className="flex items-center justify-between py-2">
             <div className="flex items-center gap-2">
               <input type="checkbox" className="rounded border-outline bg-surface-container-low text-primary focus:ring-primary" id="remember" />
-              <label htmlFor="remember" className="text-xs font-bold text-text-muted uppercase tracking-tighter">Remember me</label>
+              <label htmlFor="remember" className="text-xs font-bold text-text-muted uppercase tracking-tighter">Recordarme</label>
             </div>
             <Link to="/forgot" className="text-xs text-primary font-bold hover:text-primary-hover transition-colors uppercase tracking-tighter">
-              Forgot?
+              ¿Olvidaste tu contraseña?
             </Link>
           </div>
 
@@ -111,10 +111,10 @@ export default function Login() {
             disabled={loading}
             className="w-full btn-primary py-3.5 flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed text-sm uppercase tracking-widest font-bold"
           >
-            {loading ? 'Processing...' : (
+            {loading ? 'Procesando...' : (
               <>
                 <LogIn size={18} />
-                Sign In
+                Iniciar Sesión
               </>
             )}
           </button>
@@ -126,17 +126,17 @@ export default function Login() {
               <div className="w-full border-t border-outline"></div>
             </div>
             <div className="relative flex justify-center text-[10px] uppercase font-bold tracking-widest">
-              <span className="bg-surface px-4 text-text-muted">Or continue with</span>
+              <span className="bg-surface px-4 text-text-muted">O continúa con</span>
             </div>
           </div>
 
           <button
             onClick={handleGoogleSignIn}
             disabled={loading}
-            className="mt-6 w-full flex items-center justify-center gap-3 px-4 py-3 bg-white/5 border border-outline rounded-xl hover:bg-white/10 transition-all text-xs font-bold uppercase tracking-widest text-text-main disabled:opacity-50"
+            className="mt-6 w-full flex items-center justify-center gap-3 px-4 py-3 bg-white/5 border border-outline rounded-xl hover:bg-white/10 transition-all text-sm font-bold uppercase tracking-widest text-text-main disabled:opacity-50"
           >
             <Chrome size={18} className="text-primary" />
-            Google Workspace
+            Cuenta de Google
           </button>
         </div>
 

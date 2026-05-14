@@ -19,7 +19,12 @@ import Header from './components/Layout/Header';
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
   const { user, loading } = useAuth();
   
-  if (loading) return <div className="flex items-center justify-center h-screen">Loading...</div>;
+  if (loading) return (
+    <div className="flex flex-col items-center justify-center h-screen bg-background gap-4">
+      <div className="w-12 h-12 border-4 border-primary border-t-transparent rounded-full animate-spin"></div>
+      <p className="text-xs font-bold text-text-muted uppercase tracking-widest animate-pulse">Cargando...</p>
+    </div>
+  );
   if (!user) return <Navigate to="/login" />;
   
   return <>{children}</>;
