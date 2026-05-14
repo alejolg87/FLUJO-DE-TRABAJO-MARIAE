@@ -1,0 +1,124 @@
+{
+  "entities": {
+    "User": {
+      "title": "User",
+      "description": "User profile information",
+      "type": "object",
+      "properties": {
+        "uid": { "type": "string" },
+        "email": { "type": "string", "format": "email" },
+        "displayName": { "type": "string" },
+        "photoURL": { "type": "string" },
+        "role": { "type": "string", "enum": ["admin", "member", "guest"] },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["uid", "email"]
+    },
+    "Workspace": {
+      "title": "Workspace",
+      "description": "Enterprise workspace container",
+      "type": "object",
+      "properties": {
+        "name": { "type": "string" },
+        "ownerId": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["name", "ownerId"]
+    },
+    "Project": {
+      "title": "Project",
+      "description": "A project within a workspace",
+      "type": "object",
+      "properties": {
+        "workspaceId": { "type": "string" },
+        "name": { "type": "string" },
+        "description": { "type": "string" },
+        "color": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["workspaceId", "name"]
+    },
+    "Task": {
+      "title": "Task",
+      "description": "A task within a project",
+      "type": "object",
+      "properties": {
+        "projectId": { "type": "string" },
+        "title": { "type": "string" },
+        "description": { "type": "string" },
+        "status": { "type": "string", "enum": ["todo", "in-progress", "in-review", "done"] },
+        "priority": { "type": "string", "enum": ["low", "medium", "high"] },
+        "assigneeId": { "type": "string" },
+        "dueDate": { "type": "string", "format": "date-time" },
+        "labels": { "type": "array", "items": { "type": "string" } },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["projectId", "title", "status"]
+    },
+    "Channel": {
+      "title": "Channel",
+      "description": "A chat channel",
+      "type": "object",
+      "properties": {
+        "workspaceId": { "type": "string" },
+        "projectId": { "type": "string" },
+        "name": { "type": "string" },
+        "type": { "type": "string", "enum": ["public", "private"] },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["workspaceId", "name"]
+    },
+    "Message": {
+      "title": "Message",
+      "description": "A message within a channel",
+      "type": "object",
+      "properties": {
+        "channelId": { "type": "string" },
+        "senderId": { "type": "string" },
+        "text": { "type": "string" },
+        "attachments": { "type": "array", "items": { "type": "object" } },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["channelId", "senderId", "text"]
+    },
+    "Member": {
+      "title": "Member",
+      "description": "A member of a workspace",
+      "type": "object",
+      "properties": {
+        "name": { "type": "string" },
+        "email": { "type": "string", "format": "email" },
+        "role": { "type": "string", "enum": ["admin", "member", "guest"] },
+        "status": { "type": "string", "enum": ["active", "invited"] },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["email", "name", "role", "status"]
+    },
+    "Notification": {
+      "title": "Notification",
+      "description": "User notifications",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string" },
+        "title": { "type": "string" },
+        "message": { "type": "string" },
+        "read": { "type": "boolean" },
+        "type": { "type": "string" },
+        "link": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["userId", "title", "message", "read", "createdAt"]
+    }
+  },
+  "firestore": {
+    "users": { "schema": "User", "description": "User profiles" },
+    "workspaces": { "schema": "Workspace", "description": "Workspaces" },
+    "workspaces/{workspaceId}/members": { "schema": "Member", "description": "Workspace members" },
+    "projects": { "schema": "Project", "description": "Projects" },
+    "tasks": { "schema": "Task", "description": "Tasks" },
+    "channels": { "schema": "Channel", "description": "Chat channels" },
+    "messages": { "schema": "Message", "description": "Chat messages" },
+    "notifications": { "schema": "Notification", "description": "User notifications" }
+  }
+}

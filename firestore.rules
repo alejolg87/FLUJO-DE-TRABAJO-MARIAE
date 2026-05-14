@@ -1,0 +1,155 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Default deny
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    // --- Global Helpers ---
+    function isSignedIn() { return request.auth != null; }
+    function isVerified() { return isSignedIn() && request.auth.token.email_verified == true; }
+    function isOwner(userId) { return isSignedIn() && request.auth.uid == userId; }
+    function isValidId(id) { return id is string && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$'); }
+    function incoming() { return request.resource.data; }
+    function existing() { return resource.data; }
+
+    match /test/connection {
+      allow read: if true;
+    }
+
+    // --- Entity Validations ---
+    function isValidUser(data) {
+      return data.uid == request.auth.uid &&
+             data.email == request.auth.token.email &&
+             data.keys().hasAll(['uid', 'email', 'displayName', 'photoURL', 'role', 'createdAt']) &&
+             data.keys().size() <= 8;
+    }
+
+    function isValidProject(data) {
+      return data.workspaceId is string &&
+             data.name is string && data.name.size() > 0 && data.name.size() <= 100 &&
+             data.status == 'active' &&
+             data.keys().hasAll(['workspaceId', 'name', 'description', 'color', 'status', 'createdAt']) &&
+             data.keys().size() == 6;
+    }
+
+    function isValidTask(data) {
+      return data.projectId is string &&
+             data.workspaceId is string &&
+             data.title is string && data.title.size() > 0 && data.title.size() <= 200 &&
+             data.status in ['todo', 'in-progress', 'in-review', 'done'] &&
+             data.priority in ['low', 'medium', 'high'] &&
+             data.keys().hasAll(['projectId', 'workspaceId', 'title', 'description', 'status', 'priority', 'createdAt', 'updatedAt']) &&
+             data.keys().size() <= 15;
+    }
+
+    function isValidMessage(data) {
+      return data.channelId is string &&
+             data.senderId == request.auth.uid &&
+             data.content is string &&
+             data.keys().hasAll(['channelId', 'senderId', 'senderName', 'content', 'createdAt']) &&
+             data.keys().size() <= 10;
+    }
+
+    function isValidMember(data) {
+      return data.email is string &&
+             data.name is string && data.name.size() > 0 &&
+             data.role in ['admin', 'member', 'guest'] &&
+             data.status in ['active', 'invited'] &&
+             (data.get('availability', 'available') in ['available', 'unavailable']) &&
+             data.keys().hasAll(['email', 'name', 'role', 'status', 'createdAt']) &&
+             data.keys().size() <= 6;
+    }
+
+    function isValidChannel(data) {
+      return data.workspaceId is string &&
+             data.name is string && data.name.size() > 0 &&
+             data.type in ['public', 'private'] &&
+             data.keys().hasAll(['workspaceId', 'name', 'type', 'createdAt']) &&
+             data.keys().size() == 4;
+    }
+
+    function isValidNotification(data) {
+      return data.userId is string &&
+             data.title is string && data.title.size() > 0 &&
+             data.message is string &&
+             data.read is bool &&
+             data.keys().hasAll(['userId', 'title', 'message', 'read', 'createdAt']) &&
+             data.keys().size() <= 8;
+    }
+
+    function isValidWorkspace(data) {
+      return data.name is string && data.name.size() > 0 &&
+             data.ownerId == request.auth.uid &&
+             data.keys().hasAll(['name', 'ownerId', 'createdAt']) &&
+             data.keys().size() == 3;
+    }
+
+    function isWorkspaceOwner(workspaceId) {
+      return isSignedIn() && 
+             get(/databases/$(database)/documents/workspaces/$(workspaceId)).data.ownerId == request.auth.uid;
+    }
+
+    // --- Collection Matches ---
+
+    match /users/{userId} {
+      allow get: if isSignedIn();
+      allow list: if isSignedIn();
+      allow create: if isVerified() && isValidUser(incoming());
+      allow update: if isVerified() && isOwner(userId) && (
+        incoming().diff(existing()).affectedKeys().hasOnly(['displayName', 'photoURL', 'availability'])
+      );
+    }
+
+    match /workspaces/{workspaceId} {
+      allow read: if isSignedIn();
+      allow create: if isVerified() && isValidWorkspace(incoming());
+      allow update: if isVerified() && isOwner(existing().ownerId) && isValidWorkspace(incoming());
+
+      match /members/{memberId} {
+        allow read: if isSignedIn();
+        allow create: if isVerified() && isWorkspaceOwner(workspaceId) && isValidMember(incoming());
+        allow update: if isVerified() && isWorkspaceOwner(workspaceId) && isValidMember(incoming()) && (
+          incoming().diff(existing()).affectedKeys().hasOnly(['name', 'role', 'availability'])
+        );
+        allow delete: if isVerified() && isWorkspaceOwner(workspaceId);
+      }
+    }
+
+    match /projects/{projectId} {
+      allow read: if isSignedIn();
+      allow create: if isVerified() && isValidProject(incoming());
+      allow update: if isVerified() && isValidProject(incoming()) && (
+        incoming().diff(existing()).affectedKeys().hasOnly(['name', 'description', 'color', 'status'])
+      );
+      allow delete: if isVerified(); // Ideally check ownership
+    }
+
+    match /tasks/{taskId} {
+      allow read: if isSignedIn();
+      allow create: if isVerified() && isValidTask(incoming());
+      allow update: if isVerified() && isValidTask(incoming());
+      allow delete: if isVerified();
+    }
+
+    match /channels/{channelId} {
+      allow read: if isSignedIn();
+      allow create: if isVerified() && isValidChannel(incoming());
+    }
+
+    match /messages/{messageId} {
+       allow read: if isSignedIn();
+       allow create: if isVerified() && isValidMessage(incoming());
+    }
+
+    match /notifications/{notificationId} {
+      allow list: if isSignedIn() && resource.data.userId == request.auth.uid;
+      allow get: if isSignedIn() && resource.data.userId == request.auth.uid;
+      allow create: if isVerified() && isValidNotification(incoming());
+      allow update: if isVerified() && resource.data.userId == request.auth.uid && 
+                    incoming().diff(existing()).affectedKeys().hasOnly(['read']);
+      allow delete: if isVerified() && resource.data.userId == request.auth.uid;
+    }
+  }
+}
