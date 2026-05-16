@@ -29,7 +29,7 @@ export default function Header() {
           <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-text-muted/50" size={16} />
           <input 
             type="text" 
-            placeholder="Search projects, tasks, messages..." 
+            placeholder="Buscar proyectos, tareas, mensajes..." 
             className="w-full bg-surface-container-low border border-transparent rounded-sm pl-10 pr-4 py-2 text-sm focus:bg-white focus:border-primary transition-all shadow-sm outline-none text-text-main placeholder:text-text-muted/30"
           />
         </div>
