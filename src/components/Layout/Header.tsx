@@ -1,15 +1,20 @@
 import { useState, useEffect } from 'react';
-import { Search, Bell, Menu, User, Check, Trash2 } from 'lucide-react';
-import { auth } from '../../lib/firebase';
-import { signOut } from 'firebase/auth';
+import { Search, Bell, Menu, Check } from 'lucide-react';
 import { useAuth } from '../../hooks/useAuth';
 import { subscribeNotifications, markNotificationAsRead, Notification } from '../../lib/db';
 import { motion, AnimatePresence } from 'motion/react';
+import { useNavigate } from 'react-router-dom';
 
 export default function Header() {
-  const { profile } = useAuth();
+  const { profile, logout } = useAuth();
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [showNotifications, setShowNotifications] = useState(false);
+  const navigate = useNavigate();
+
+  const handleLogout = () => {
+    logout();
+    navigate('/login');
+  };
 
   useEffect(() => {
     if (!profile?.uid) return;
@@ -110,7 +115,7 @@ export default function Header() {
         <div className="h-4 w-px bg-outline"></div>
         
         <button 
-          onClick={() => signOut(auth)}
+          onClick={handleLogout}
           className="text-text-muted hover:text-rose-500 transition-colors text-[10px] font-bold uppercase tracking-widest"
         >
           Cerrar Sesión

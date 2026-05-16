@@ -249,8 +249,9 @@ export async function updateMember(workspaceId: string, memberId: string, data: 
 export interface Channel {
   id?: string;
   name: string;
-  type: 'public' | 'private';
+  type: 'public' | 'private' | 'dm';
   workspaceId: string;
+  memberIds?: string[];
   createdAt: any;
 }
 
@@ -302,6 +303,38 @@ export async function createChannel(data: Partial<Channel>) {
     return docRef.id;
   } catch (error) {
     handleFirestoreError(error, OperationType.CREATE, 'channels');
+  }
+}
+
+export async function getOrCreateDMChannel(workspaceId: string, myId: string, otherId: string, otherName: string) {
+  try {
+    // Try to find existing DM channel
+    const q = query(
+      collection(db, 'channels'),
+      where('workspaceId', '==', workspaceId),
+      where('type', '==', 'dm'),
+      where('memberIds', 'array-contains', myId)
+    );
+    
+    const snapshot = await getDocs(q);
+    const existing = snapshot.docs.find(doc => {
+      const data = doc.data();
+      return data.memberIds && data.memberIds.includes(otherId);
+    });
+
+    if (existing) {
+      return existing.id;
+    }
+
+    // Create new DM channel
+    return await createChannel({
+      name: `DM: ${otherName}`,
+      type: 'dm',
+      workspaceId,
+      memberIds: [myId, otherId]
+    });
+  } catch (error) {
+    handleFirestoreError(error, OperationType.GET, 'channels dm');
   }
 }
 

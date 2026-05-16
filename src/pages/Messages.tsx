@@ -1,12 +1,13 @@
 import { useState, useEffect, useRef } from 'react';
-import { Search, Hash, AtSign, Smile, Paperclip, Send, Plus, Lock, MoreVertical } from 'lucide-react';
+import { Search, Hash, AtSign, Smile, Paperclip, Send, Plus, Lock, MoreVertical, Users, MessageSquare } from 'lucide-react';
 import { useAuth } from '../hooks/useAuth';
-import { subscribeChannels, subscribeMessages, createChannel, sendMessage, Channel, Message as MessageType } from '../lib/db';
+import { subscribeChannels, subscribeMessages, subscribeMembers, createChannel, sendMessage, getOrCreateDMChannel, Channel, Message as MessageType, Member } from '../lib/db';
 import EmojiPicker, { EmojiStyle } from 'emoji-picker-react';
 
 export default function Messages() {
   const { workspace, profile } = useAuth();
   const [channels, setChannels] = useState<Channel[]>([]);
+  const [members, setMembers] = useState<Member[]>([]);
   const [activeChannelId, setActiveChannelId] = useState<string>('');
   const [messages, setMessages] = useState<MessageType[]>([]);
   const [newMessage, setNewMessage] = useState('');
@@ -18,32 +19,15 @@ export default function Messages() {
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
-    return () => {
-      // Cleanup previews
-      attachedFiles.forEach(af => {
-        if (af.preview) URL.revokeObjectURL(af.preview);
-      });
-    };
-  }, [attachedFiles]);
-
-  useEffect(() => {
-    function handleClickOutside(event: MouseEvent) {
-      if (emojiPickerRef.current && !emojiPickerRef.current.contains(event.target as Node)) {
-        setShowEmojiPicker(false);
-      }
-    }
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
-  }, []);
-
-  useEffect(() => {
     if (!workspace?.id) return;
-    const unsubscribe = subscribeChannels(workspace.id, (data) => {
+    
+    // Subscribe to Channels
+    const unsubChannels = subscribeChannels(workspace.id, (data) => {
       setChannels(data);
       if (data.length > 0 && !activeChannelId) {
-        setActiveChannelId(data[0].id!);
+        const defaultChannel = data.find(c => c.name === 'general') || data[0];
+        setActiveChannelId(defaultChannel.id!);
       } else if (data.length === 0) {
-        // Create a default general channel if none exists
         createChannel({ 
           name: 'general', 
           type: 'public', 
@@ -51,7 +35,14 @@ export default function Messages() {
         });
       }
     });
-    return () => unsubscribe();
+
+    // Subscribe to Members
+    const unsubMembers = subscribeMembers(workspace.id, setMembers);
+
+    return () => {
+      unsubChannels();
+      unsubMembers();
+    };
   }, [workspace?.id]);
 
   useEffect(() => {
@@ -64,6 +55,14 @@ export default function Messages() {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages]);
 
+  const handleStartDM = async (member: Member) => {
+    if (!workspace?.id || !profile?.uid) return;
+    const channelId = await getOrCreateDMChannel(workspace.id, profile.uid, member.id!, member.name);
+    if (channelId) {
+      setActiveChannelId(channelId);
+    }
+  };
+
   const handleSendMessage = async (e?: React.FormEvent) => {
     e?.preventDefault();
     if ((!newMessage.trim() && attachedFiles.length === 0) || !activeChannelId || !profile) return;
@@ -74,14 +73,11 @@ export default function Messages() {
     
     try {
       const attachments = await Promise.all(attachedFiles.map(async ({file, preview}) => {
-        // In a real app we'd upload to Storage
-        // For now, we'll use a data URL if small, or just mock metadata
-        // Actually, let's use the local preview for the current session and simulation
         return {
           name: file.name,
           type: file.type,
           size: file.size,
-          url: preview || '#' // Fallback
+          url: preview || '#'
         };
       }));
 
@@ -142,29 +138,68 @@ export default function Messages() {
             <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-text-muted/50" size={16} />
             <input 
               type="text" 
-              placeholder="Buscar conversación..." 
+              placeholder="Buscar..." 
               className="w-full bg-surface-container-low border border-outline rounded-full pl-10 pr-4 py-2 text-sm text-text-main focus:border-primary transition-all outline-none"
             />
           </div>
         </div>
 
-        <div className="flex-1 overflow-y-auto no-scrollbar">
-          <div className="mt-8">
-            <div className="space-y-1 px-3 mt-4">
-              {channels.filter(c => c.name !== 'general').map((channel) => (
+        <div className="flex-1 overflow-y-auto no-scrollbar py-4">
+          {/* Canales Públicos */}
+          <div className="px-5 mb-6">
+            <h3 className="text-[10px] uppercase font-bold tracking-widest text-text-muted/50 mb-3 flex items-center justify-between">
+              Canales
+              <button className="hover:text-primary transition-colors">
+                <Plus size={12} />
+              </button>
+            </h3>
+            <div className="space-y-1">
+              {channels.filter(c => c.type !== 'dm').map((channel) => (
                 <div 
                   key={channel.id} 
                   onClick={() => setActiveChannelId(channel.id!)}
-                  className={`flex items-center gap-3 px-5 py-2.5 rounded-sm cursor-pointer transition-all border border-transparent ${
+                  className={`flex items-center gap-3 px-3 py-2 rounded-sm cursor-pointer transition-all ${
                     activeChannelId === channel.id 
-                      ? 'bg-tertiary text-primary shadow-sm font-semibold' 
+                      ? 'bg-primary text-white shadow-lg shadow-primary/20 font-semibold' 
                       : 'text-text-muted hover:bg-surface-container hover:text-text-main group'
                   }`}
                 >
-                  <Hash size={18} className={activeChannelId === channel.id ? 'text-primary' : 'text-text-muted/50 group-hover:text-text-main'} />
+                  <Hash size={16} className={activeChannelId === channel.id ? 'text-white' : 'text-text-muted/50 group-hover:text-text-main'} />
                   <span className="text-sm truncate flex-1">{channel.name}</span>
                 </div>
               ))}
+            </div>
+          </div>
+
+          {/* Mensajes Directos (Miembros) */}
+          <div className="px-5">
+            <h3 className="text-[10px] uppercase font-bold tracking-widest text-text-muted/50 mb-3">
+              Mensajes Directos
+            </h3>
+            <div className="space-y-1">
+              {members.filter(m => m.id !== profile?.uid).map((member) => (
+                <div 
+                  key={member.id} 
+                  onClick={() => handleStartDM(member)}
+                  className={`flex items-center gap-3 px-3 py-2 rounded-sm cursor-pointer transition-all ${
+                    channels.find(c => c.type === 'dm' && c.memberIds?.includes(member.id!) && activeChannelId === c.id)
+                      ? 'bg-primary text-white shadow-lg shadow-primary/20 font-semibold' 
+                      : 'text-text-muted hover:bg-surface-container hover:text-text-main group'
+                  }`}
+                >
+                  <div className="relative">
+                    <img 
+                      src={`https://ui-avatars.com/api/?name=${member.name}&background=random`} 
+                      className="w-6 h-6 rounded-sm border border-outline"
+                    />
+                    <div className={`absolute -bottom-0.5 -right-0.5 w-2 h-2 rounded-full border border-surface ${member.availability === 'available' ? 'bg-emerald-500' : 'bg-text-muted'}`}></div>
+                  </div>
+                  <span className="text-sm truncate flex-1">{member.name}</span>
+                </div>
+              ))}
+              {members.length <= 1 && (
+                <p className="text-[10px] text-text-muted/40 italic px-3 py-2">No hay otros miembros</p>
+              )}
             </div>
           </div>
         </div>
@@ -172,10 +207,35 @@ export default function Messages() {
 
       {/* Área de Chat */}
       <div className="flex-1 flex flex-col min-w-0 bg-background">
+        {/* Header del Chat */}
+        <div className="h-20 border-b border-outline bg-surface/50 backdrop-blur-md flex items-center justify-between px-8 shrink-0">
+          <div className="flex items-center gap-4">
+            <div className="p-2 bg-primary/10 text-primary rounded-sm shadow-inner">
+              {activeChannel?.type === 'dm' ? <Users size={18} /> : <Hash size={18} />}
+            </div>
+            <div>
+              <h3 className="text-sm font-bold text-text-main tracking-tight">
+                {activeChannel?.name || 'Cargando...'}
+              </h3>
+              <p className="text-[10px] font-medium text-text-muted uppercase tracking-widest opacity-60">
+                {activeChannel?.type === 'dm' ? 'Mensaje Privado' : 'Canal Público'}
+              </p>
+            </div>
+          </div>
+          <button className="p-2 hover:bg-surface-container rounded-sm transition-all text-text-muted">
+            <MoreVertical size={18} />
+          </button>
+        </div>
+
         <div className="flex-1 overflow-y-auto p-8 space-y-6 bg-background no-scrollbar">
           {messages.length === 0 && (
-            <div className="h-full flex items-center justify-center text-text-muted text-[10px] uppercase font-bold tracking-widest italic">
-              Sin mensajes aún en este canal
+            <div className="h-full flex flex-col items-center justify-center text-text-muted gap-4">
+              <div className="p-4 bg-surface-container-low rounded-full border border-outline border-dashed">
+                <MessageSquare size={32} className="opacity-20" />
+              </div>
+              <p className="text-[10px] uppercase font-bold tracking-widest italic opacity-40">
+                Sin mensajes aún en este canal
+              </p>
             </div>
           )}
           {messages.map((msg, idx) => (
@@ -330,8 +390,7 @@ function Message({ user, time, text, avatar, isSelf, attachments }: any) {
                       className={`flex items-center gap-3 p-3 rounded-sm border ${
                         isSelf 
                           ? 'bg-white/10 border-white/20 text-white hover:bg-white/10 shadow-lg shadow-black/10' 
-                          : 'bg-surface-container-low border-outline hover:border-text-muted/20'
-                      } transition-all`}
+                          : 'bg-surface-container-low border-outline hover:border-text-muted/20'} transition-all`}
                     >
                       <Paperclip size={14} />
                       <div className="min-w-0">

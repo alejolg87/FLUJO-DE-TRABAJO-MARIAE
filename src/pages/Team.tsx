@@ -6,7 +6,7 @@ import InviteMemberModal from '../components/Team/InviteMemberModal';
 import EditMemberModal from '../components/Team/EditMemberModal';
 
 export default function Team() {
-  const { workspace, profile } = useAuth();
+  const { workspace, profile, updateProfile } = useAuth();
   const [members, setMembers] = useState<Member[]>([]);
   const [isInviteModalOpen, setIsInviteModalOpen] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
@@ -37,8 +37,7 @@ export default function Team() {
   );
 
   const handleOwnerAvailabilityChange = async (availability: 'available' | 'unavailable') => {
-    if (!profile?.uid) return;
-    await updateUserProfile(profile.uid, { availability });
+    await updateProfile({ availability });
   };
 
   return (
@@ -96,7 +95,7 @@ export default function Team() {
                     </div>
                     <div>
                       <p className="text-sm font-bold text-text-main">{profile?.displayName || 'Tú'}</p>
-                      <p className="text-[11px] text-text-muted font-medium">{profile?.email}</p>
+                      <p className="text-[11px] text-text-muted font-medium">{profile?.email || 'Propietario del espacio'}</p>
                     </div>
                   </div>
                 </td>

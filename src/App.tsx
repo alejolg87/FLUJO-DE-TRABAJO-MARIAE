@@ -6,7 +6,6 @@ import Icons from 'lucide-react';
 // Pages (to be created)
 import Dashboard from './pages/Dashboard';
 import Login from './pages/Login';
-import Register from './pages/Register';
 import Tasks from './pages/Tasks';
 import Calendar from './pages/Calendar';
 import Messages from './pages/Messages';
@@ -50,7 +49,6 @@ export default function App() {
       <BrowserRouter>
         <Routes>
           <Route path="/login" element={<Login />} />
-          <Route path="/register" element={<Register />} />
           
           <Route path="/" element={
             <ProtectedRoute>

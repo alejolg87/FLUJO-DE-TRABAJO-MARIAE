@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { X } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { createProject, updateProject, Project } from '../../lib/db';
@@ -38,6 +38,14 @@ export default function ProjectModal({ isOpen, onClose, workspaceId, project }: 
   const [description, setDescription] = useState(project?.description || '');
   const [color, setColor] = useState(project?.color || COLORS[0]);
   const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    if (isOpen) {
+      setName(project?.name || '');
+      setDescription(project?.description || '');
+      setColor(project?.color || COLORS[0]);
+    }
+  }, [project, isOpen]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();

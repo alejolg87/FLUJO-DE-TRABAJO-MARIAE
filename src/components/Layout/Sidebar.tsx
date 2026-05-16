@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { NavLink } from 'react-router-dom';
+import { NavLink, useNavigate } from 'react-router-dom';
 import { LayoutDashboard, BookOpen, CheckSquare, Calendar, MessageSquare, Users, Settings, HelpCircle, Plus, Hash } from 'lucide-react';
 import { motion } from 'motion/react';
 import { useAuth } from '../../hooks/useAuth';
@@ -15,8 +15,14 @@ const navItems = [
 ];
 
 export default function Sidebar() {
-  const { profile, workspace } = useAuth();
+  const { profile, workspace, logout } = useAuth();
   const [projects, setProjects] = useState<Project[]>([]);
+  const navigate = useNavigate();
+
+  const handleLogout = () => {
+    logout();
+    navigate('/login');
+  };
 
   useEffect(() => {
     if (!workspace?.id) return;
@@ -81,13 +87,13 @@ export default function Sidebar() {
       </nav>
 
       <div className="p-4 mt-auto space-y-1">
-        <NavLink
-          to="/settings"
-          className="flex items-center gap-3 px-3 py-2 rounded-sm text-text-muted hover:bg-surface-container hover:text-text-main transition-all font-medium"
+        <button
+          onClick={handleLogout}
+          className="w-full flex items-center gap-3 px-3 py-2 rounded-sm text-rose-500 hover:bg-rose-50 transition-all font-bold text-sm uppercase tracking-widest mt-2"
         >
-          <Settings size={18} />
-          <span className="text-sm">Configuración</span>
-        </NavLink>
+          <HelpCircle size={18} />
+          <span>Cerrar Sesión</span>
+        </button>
         
         <div className="pt-4 border-t border-outline mt-2 flex items-center gap-3 px-3 py-2 bg-surface-container-low rounded-sm">
           <img 
